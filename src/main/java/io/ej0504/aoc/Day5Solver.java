@@ -1,38 +1,30 @@
 package io.ej0504.aoc;
 
-import java.util.*;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Day5Solver {
 
     public int part1(String fileName) {
-        ResourceParser resourceParser = new ResourceParser();
-        final Map<Point, Integer> countMap = new HashMap<>();
-        resourceParser.parse(fileName)
-                .stream()
-                .map(this::toLine)
-                .filter(this::isOrthogonal)
-                .flatMap(this::generatePoints)
-                .forEach(point -> countMap.compute(point, (k, v) -> v == null ? 1 : v + 1));
-
-        return countDuplicatePoints(countMap);
+        return process(fileName, false);
     }
 
     public int part2(String fileName) {
-        ResourceParser resourceParser = new ResourceParser();
-        final Map<Point, Integer> countMap = new HashMap<>();
-        resourceParser.parse(fileName)
-                .stream()
-                .map(this::toLine)
-                .flatMap(this::generatePoints)
-                .forEach(point -> countMap.compute(point, (k, v) -> v == null ? 1 : v + 1));
-
-        return countDuplicatePoints(countMap);
+        return process(fileName, true);
     }
 
-    private int countDuplicatePoints(Map<Point, Integer> countMap) {
-        return (int) countMap.values().stream()
+    private int process(String fileName, boolean includeOrthogonal) {
+
+        Stream<Line> lines = new ResourceParser().parse(fileName)
+                .stream()
+                .map(this::toLine);
+
+        Stream<Line> filtered = includeOrthogonal ? lines : lines.filter(this::isOrthogonal);
+
+        return (int) filtered
+                .flatMap(this::generatePoints)
+                .collect(Collectors.toMap(p -> p, p -> 1, Integer::sum))
+                .values().stream()
                 .filter(value -> value > 1)
                 .count();
     }
@@ -48,8 +40,7 @@ public class Day5Solver {
     }
 
     private boolean isOrthogonal(Line line) {
-        return line.start.x == line.end.x ||
-                line.start.y == line.end.y;
+        return line.start.x == line.end.x || line.start.y == line.end.y;
     }
 
     private Stream<Point> generatePoints(Line line) {
@@ -65,9 +56,7 @@ public class Day5Solver {
         return builder.build();
     }
 
-    private record Line(Point start, Point end) {
-    }
+    private record Line(Point start, Point end) {}
 
-    private record Point(int x, int y) {
-    }
+    private record Point(int x, int y) {}
 }
