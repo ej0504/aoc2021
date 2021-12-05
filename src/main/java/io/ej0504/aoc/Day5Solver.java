@@ -13,15 +13,11 @@ public class Day5Solver {
         return process(fileName, true);
     }
 
-    private int process(String fileName, boolean includeOrthogonal) {
+    private int process(String fileName, boolean includeDiagonal) {
 
-        Stream<Line> lines = new ResourceParser().parse(fileName)
-                .stream()
-                .map(this::toLine);
-
-        Stream<Line> filtered = includeOrthogonal ? lines : lines.filter(this::isOrthogonal);
-
-        return (int) filtered
+        return (int) new ResourceParser().parse(fileName).stream()
+                .map(this::toLine)
+                .filter(line -> includeDiagonal || isNotDiagonal(line))
                 .flatMap(this::generatePoints)
                 .collect(Collectors.toMap(p -> p, p -> 1, Integer::sum))
                 .values().stream()
@@ -39,7 +35,7 @@ public class Day5Solver {
         return new Line(toPoint(ends[0]), toPoint(ends[1]));
     }
 
-    private boolean isOrthogonal(Line line) {
+    private boolean isNotDiagonal(Line line) {
         return line.start.x == line.end.x || line.start.y == line.end.y;
     }
 
@@ -47,9 +43,7 @@ public class Day5Solver {
         Point dir = new Point(Integer.signum(line.end.x - line.start.x), Integer.signum(line.end.y - line.start.y));
 
         Stream.Builder<Point> builder = Stream.builder();
-        for (Point value = line.start;
-             !value.equals(line.end);
-             value = new Point(value.x + dir.x, value.y + dir.y)) {
+        for (Point value = line.start; !value.equals(line.end); value = new Point(value.x + dir.x, value.y + dir.y)) {
             builder.add(value);
         }
         builder.add(line.end);
